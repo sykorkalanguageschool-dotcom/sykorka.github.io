@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Akuzativ plurálu — kartičky</title>
+<style>
+  :root {
+    --bg: #fafafa;
+    --card: #ffffff;
+    --border: #e5e5e8;
+    --border-strong: #d8d8dc;
+    --text: #1a1a1e;
+    --text-soft: #8a8a92;
+    --text-mid: #55555c;
+    --accent: #3b6ef0;
+    --accent-soft: #eaf0ff;
+    --radius: 18px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+    padding: 40px 18px 60px;
+  }
+
+  .app { width: 100%; max-width: 620px; }
+
+  h1 {
+    font-size: 1.55rem;
+    font-weight: 700;
+    margin: 0 0 8px;
+  }
+
+  .subtitle {
+    color: var(--text-mid);
+    font-size: 0.98rem;
+    margin: 0 0 26px;
+    line-height: 1.4;
+  }
+
+  .meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 10px;
+  }
+
+  .meta-left .tag {
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    color: var(--text-soft);
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .meta-left .count {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-top: 4px;
+  }
+
+  .reset-link {
+    background: none;
+    border: 1px solid var(--border-strong);
+    color: var(--text-mid);
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+  .reset-link:hover { border-color: var(--accent); color: var(--accent); }
+
+  .dots {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 26px;
+    flex-wrap: wrap;
+  }
+
+  .dot {
+    height: 4px;
+    flex: 1;
+    min-width: 6px;
+    border-radius: 999px;
+    background: var(--border);
+  }
+
+  .dot.active { background: var(--accent); }
+  .dot.done { background: var(--border-strong); }
+
+  .card-scene {
+    perspective: 1600px;
+    margin-bottom: 22px;
+  }
+
+  .card {
+    position: relative;
+    width: 100%;
+    min-height: 280px;
+    cursor: pointer;
+    transform-style: preserve-3d;
+    transition: transform 0.5s ease;
+    border-radius: var(--radius);
+  }
+
+  .card.flipped { transform: rotateY(180deg); }
+
+  .card-face {
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius);
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 32px 30px;
+    display: flex;
+    flex-direction: column;
+    backface-visibility: hidden;
+  }
+
+  .card-back { transform: rotateY(180deg); }
+
+  .face-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-soft);
+    font-weight: 700;
+  }
+
+  .prep-pill {
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+  }
+
+  .face-center {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px 0;
+  }
+
+  .front-number {
+    font-size: 2.6rem;
+    font-weight: 800;
+    color: var(--text);
+  }
+
+  .front-sub {
+    font-size: 0.95rem;
+    color: var(--text-mid);
+    margin-top: 8px;
+  }
+
+  .back-question {
+    font-size: 1.3rem;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+
+  .face-bottom-hint {
+    text-align: center;
+    font-size: 0.78rem;
+    color: var(--text-soft);
+  }
+
+  .nav-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 26px;
+  }
+
+  .nav-btn {
+    flex: 1;
+    padding: 14px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border-strong);
+    background: var(--card);
+    color: var(--text);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+  }
+
+  .nav-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .nav-btn.flip-btn {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .nav-btn:not(:disabled):hover { border-color: var(--accent); color: var(--accent); }
+
+  .settings-box {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 22px;
+  }
+
+  .settings-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+
+  .settings-title {
+    font-weight: 700;
+    font-size: 1rem;
+  }
+
+  .settings-sub {
+    font-size: 0.78rem;
+    color: var(--text-soft);
+  }
+
+  .pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .filter-pill {
+    padding: 9px 16px;
+    border-radius: 999px;
+    border: 1px solid var(--border-strong);
+    background: var(--card);
+    color: var(--text-mid);
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .filter-pill.active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .settings-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    color: var(--text-soft);
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .restart-btn {
+    background: var(--text);
+    color: #fff;
+    border: none;
+    padding: 9px 16px;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .footer-note {
+    text-align: center;
+    margin-top: 22px;
+    font-size: 0.8rem;
+    color: var(--text-soft);
+  }
+
+  .finish-screen {
+    display: none;
+    text-align: center;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 50px 30px;
+    margin-bottom: 22px;
+  }
+  .finish-screen.visible { display: block; }
+  .finish-screen h2 { margin: 0 0 8px; font-size: 1.25rem; }
+  .finish-screen p { color: var(--text-mid); margin: 0 0 20px; }
+
+  .hidden { display: none !important; }
+
+  @media (max-width: 480px) {
+    .card { min-height: 240px; }
+    .front-number { font-size: 2.1rem; }
+    .back-question { font-size: 1.1rem; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <h1>Akuzativ plurálu — kartičky</h1>
+  <p class="subtitle">Přečti si otázku nahlas a zkus na ni odpovědět akuzativem plurálu. Kartička neobsahuje odpověď — jen otázku k procvičení.</p>
+
+  <div class="meta-row">
+    <div class="meta-left">
+      <div class="tag" id="filterTag">VŠECHNY PŘEDLOŽKY</div>
+      <div class="count" id="counter">Otázka 1 z 30</div>
+    </div>
+  </div>
+
+  <div class="dots" id="dots"></div>
+
+  <div class="card-scene">
+    <div class="card" id="card">
+      <div class="card-face card-front">
+        <div class="face-top-row">
+          <span id="frontLabelLeft">OTÁZKA</span>
+          <span class="prep-pill" id="frontPrepTag">VŠECHNY</span>
+        </div>
+        <div class="face-center">
+          <div>
+            <div class="front-number" id="frontNumber">1</div>
+            <div class="front-sub" id="frontSub">z 30 · procvičení všech předložek</div>
+          </div>
+        </div>
+        <div class="face-bottom-hint">Klikni pro zobrazení otázky</div>
+      </div>
+      <div class="card-face card-back">
+        <div class="face-top-row">
+          <span>OTÁZKA</span>
+          <span class="prep-pill" id="backPrepTag">VŠECHNY</span>
+        </div>
+        <div class="face-center">
+          <div class="back-question" id="backQuestion"></div>
+        </div>
+        <div class="face-bottom-hint">Klikni pro návrat</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="finish-screen" id="finishScreen">
+    <h2>Výborně! Procvičila jsi akuzativ plurálu.</h2>
+    <p>Prošla jsi všechny otázky ve vybraném výběru.</p>
+    <button class="restart-btn" id="restartBtn2">Začít znovu</button>
+  </div>
+
+  <div class="nav-row" id="navRow">
+    <button class="nav-btn" id="prevBtn">← Předchozí</button>
+    <button class="nav-btn flip-btn" id="flipBtn">Otočit kartičku ⟲</button>
+    <button class="nav-btn" id="nextBtn">Další →</button>
+  </div>
+
+  <div class="settings-box">
+    <div class="settings-title-row">
+      <div class="settings-title">Nastavení procvičování</div>
+      <div class="settings-sub" id="settingsSub">Všechny předložky</div>
+    </div>
+    <div class="pill-row" id="pillRow"></div>
+    <div class="settings-footer">
+      <span>Použij šipky ← → na klávesnici nebo tlačítka.</span>
+      <button class="restart-btn" id="restartBtn">Začít znovu</button>
+    </div>
+  </div>
+
+  <div class="footer-note" id="footerNote">Otázka 1. Přečti a odpověz nahlas.</div>
+
+</div>
+
+<script>
+  const cardsData = [
+    { q: "Které vlastnosti podle tebe náležejí mezi nejdůležitější vlastnosti dobrého lídra?", prep: "mezi" },
+    { q: "Které věci podle tebe patří mezi největší životní radosti?", prep: "mezi" },
+    { q: "Kdybys měl/a rozdělit všechny domácí práce mezi své kamarády, komu bys svěřil/a které úkoly?", prep: "mezi" },
+    { q: "Na jaké změny ve společnosti podle tebe čekáme už příliš dlouho?", prep: "na" },
+    { q: "Kdybys měl/a dělit své měsíční příjmy mezi bydlení, jídlo, cestování a zábavu, jak bys je rozdělil/a?", prep: "na" },
+    { q: "Na jaké věci se podle tebe lidé příliš často dívají jen povrchně?", prep: "na" },
+    { q: "Na jaké detaily by měl/a člověk dbát, když chce udělat dobrý první dojem?", prep: "na" },
+    { q: "Na jaké věci myslíš, když se ráno probudíš a víš, že tě čeká náročný den?", prep: "na" },
+    { q: "Na jaké otázky by podle tebe měl/a každý člověk znát odpověď?", prep: "na" },
+    { q: "Na které okamžiky ze svého života si budeš pravděpodobně pamatovat i za třicet let?", prep: "na" },
+    { q: "Na jaké situace reaguješ přehnaně a na jaké naopak vůbec?", prep: "na" },
+    { q: "Na které lidi se můžeš spolehnout, když se všechno začne komplikovat?", prep: "na" },
+    { q: "Na co si lidé podle tebe nejčastěji stěžují, i když by s tím mohli něco udělat?", prep: "na" },
+    { q: "Na jaké věci se těšíš, i když jsou ještě hodně daleko?", prep: "na" },
+    { q: "Na jaké chyby bys upozornil/a člověka, který se právě přestěhoval do České republiky?", prep: "na" },
+    { q: "Na jaké věci si člověk podle tebe nejhůř zvyká po přestěhování do jiné země?", prep: "na" },
+    { q: "Kterých situací se podle tebe lidé bojí zbytečně?", prep: "o" },
+    { q: "Za jaké hodnoty nebo ideály by podle tebe mělo smysl bojovat?", prep: "o" },
+    { q: "Kdybys mohl/a jít na večeři s jakýmikoli slavnými lidmi, koho by sis vybral/a?", prep: "o" },
+    { q: "Jaké hry jste hráli jako děti a které z nich bys dnes už hrát nechtěl/a?", prep: "o" },
+    { q: "O které věci nebo osoby bychom měli pečovat mnohem víc, než to běžně děláme?", prep: "o" },
+    { q: "O jaké věci ses v životě pokusil/a, i když sis nebyl/a jistý/á, že to zvládneš?", prep: "o" },
+    { q: "O co bys nikdy neprosil/a, ani kdyby to pro tebe bylo velmi důležité?", prep: "o" },
+    { q: "O jaké příležitosti může člověk přijít, když se příliš bojí riskovat?", prep: "o" },
+    { q: "O co se podle tebe lidé v dnešní době snaží až příliš?", prep: "o" },
+    { q: "O jaké cíle by měl člověk usilovat, aby vedl spokojený život?", prep: "o" },
+    { q: "O jaká témata se podle tebe lidé začnou zajímat až ve chvíli, kdy se jich osobně dotknou?", prep: "o" },
+    { q: "O jaké věci můžeš bez problémů požádat své přátele, ale u cizích lidí by ti to bylo nepříjemné?", prep: "o" },
+    { q: "Pro jaké změny bys hlasoval/a, kdybys mohl/a rozhodovat o fungování svého města?", prep: "pro" },
+    { q: "Co pro tebe znamenají skutečné přátelské vztahy?", prep: "pro" },
+    { q: "V jaké výsledky nebo změny doufáš v příštích několika letech?", prep: "v" },
+    { q: "V jaké věci věříš, i když ti ostatní lidé říkají, že jsou nereálné?", prep: "v" },
+    { q: "Za jaké věci by podle tebe člověk neměl nikdy přestat bojovat?", prep: "za" },
+    { q: "Za jaké věci bys chtěl/a poděkovat lidem, kteří ovlivnili tvůj život?", prep: "za" },
+    { q: "Kdybys mohl/a za jeden den vyměnit všechny své povinnosti za jakékoli jiné činnosti, za co bys je vyměnil/a?", prep: "za" },
+    { q: "Za jaké služby nebo produkty podle tebe lidé platí zbytečně moc peněz?", prep: "za" },
+    { q: "Které vlastnosti pokládáš za nejdůležitější u dobrého přítele?", prep: "za" },
+    { q: "Které věci považuješ za naprosto nezbytné pro pohodlný život?", prep: "za" },
+    { q: "Kdybys mohl/a vyměnit svůj současný životní styl za úplně jiný, co by sis vybral/a?", prep: "za" }
+  ];
+
+  const prepLabels = {
+    all: "VŠECHNY",
+    mezi: "MEZI",
+    na: "NA",
+    o: "O",
+    pro: "PRO",
+    v: "V",
+    za: "ZA"
+  };
+
+  const prepSubLabels = {
+    all: "procvičení všech předložek",
+    mezi: "procvičení předložky „mezi“",
+    na: "procvičení předložky „na“",
+    o: "procvičení předložky „o“",
+    pro: "procvičení předložky „pro“",
+    v: "procvičení předložky „v“",
+    za: "procvičení předložky „za“"
+  };
+
+  const filters = ["all", "na", "o", "pro", "v", "za", "mezi"];
+
+  let activeFilter = "all";
+  let order = [];
+  let currentPos = 0;
+  let isFlipped = false;
+
+  const card = document.getElementById('card');
+  const frontNumber = document.getElementById('frontNumber');
+  const frontSub = document.getElementById('frontSub');
+  const frontPrepTag = document.getElementById('frontPrepTag');
+  const backPrepTag = document.getElementById('backPrepTag');
+  const backQuestion = document.getElementById('backQuestion');
+  const filterTag = document.getElementById('filterTag');
+  const counter = document.getElementById('counter');
+  const dots = document.getElementById('dots');
+  const settingsSub = document.getElementById('settingsSub');
+  const pillRow = document.getElementById('pillRow');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const flipBtn = document.getElementById('flipBtn');
+  const restartBtn = document.getElementById('restartBtn');
+  const restartBtn2 = document.getElementById('restartBtn2');
+  const navRow = document.getElementById('navRow');
+  const finishScreen = document.getElementById('finishScreen');
+  const footerNote = document.getElementById('footerNote');
+
+  function buildOrder() {
+    let indices = cardsData.map((_, i) => i);
+    if (activeFilter !== "all") {
+      indices = indices.filter(i => cardsData[i].prep === activeFilter);
+    }
+    return indices;
+  }
+
+  function buildPills() {
+    pillRow.innerHTML = "";
+    filters.forEach(f => {
+      const btn = document.createElement('button');
+      btn.className = 'filter-pill' + (f === activeFilter ? ' active' : '');
+      btn.textContent = prepLabels[f];
+      btn.addEventListener('click', () => {
+        activeFilter = f;
+        order = buildOrder();
+        currentPos = 0;
+        buildPills();
+        showCards();
+        renderCard();
+      });
+      pillRow.appendChild(btn);
+    });
+  }
+
+  function buildDots() {
+    dots.innerHTML = "";
+    order.forEach((_, i) => {
+      const d = document.createElement('div');
+      d.className = 'dot' + (i === currentPos ? ' active' : (i < currentPos ? ' done' : ''));
+      dots.appendChild(d);
+    });
+  }
+
+  function renderCard() {
+    if (order.length === 0) return;
+    const dataIndex = order[currentPos];
+    const item = cardsData[dataIndex];
+    const label = prepLabels[activeFilter];
+
+    frontNumber.textContent = currentPos + 1;
+    frontSub.textContent = `z ${order.length} · ${prepSubLabels[activeFilter]}`;
+    frontPrepTag.textContent = label;
+    backPrepTag.textContent = label;
+    backQuestion.textContent = item.q;
+
+    filterTag.textContent = activeFilter === "all" ? "VŠECHNY PŘEDLOŽKY" : `PŘEDLOŽKA: ${label}`;
+    counter.textContent = `Otázka ${currentPos + 1} z ${order.length}`;
+    settingsSub.textContent = activeFilter === "all" ? "Všechny předložky" : `Jen předložka „${activeFilter}“`;
+    footerNote.textContent = `Otázka ${currentPos + 1}. Přečti a odpověz nahlas.`;
+
+    isFlipped = false;
+    card.classList.remove('flipped');
+
+    prevBtn.disabled = currentPos === 0;
+    nextBtn.textContent = currentPos === order.length - 1 ? "Dokončit ✓" : "Další →";
+
+    buildDots();
+  }
+
+  function showFinish() {
+    document.querySelector('.card-scene').classList.add('hidden');
+    navRow.classList.add('hidden');
+    finishScreen.classList.add('visible');
+  }
+
+  function showCards() {
+    document.querySelector('.card-scene').classList.remove('hidden');
+    navRow.classList.remove('hidden');
+    finishScreen.classList.remove('visible');
+  }
+
+  function goNext() {
+    if (currentPos < order.length - 1) {
+      currentPos++;
+      renderCard();
+    } else {
+      showFinish();
+    }
+  }
+
+  function goPrev() {
+    if (currentPos > 0) {
+      currentPos--;
+      renderCard();
+    }
+  }
+
+  function flip() {
+    isFlipped = !isFlipped;
+    card.classList.toggle('flipped');
+  }
+
+  function restart() {
+    order = buildOrder();
+    currentPos = 0;
+    showCards();
+    renderCard();
+  }
+
+  card.addEventListener('click', flip);
+  flipBtn.addEventListener('click', flip);
+  nextBtn.addEventListener('click', goNext);
+  prevBtn.addEventListener('click', goPrev);
+  restartBtn.addEventListener('click', restart);
+  restartBtn2.addEventListener('click', restart);
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') goNext();
+    if (e.key === 'ArrowLeft') goPrev();
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flip(); }
+  });
+
+  buildPills();
+  order = buildOrder();
+  renderCard();
+</script>
+</body>
+</html>
